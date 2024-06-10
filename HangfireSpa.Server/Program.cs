@@ -1,6 +1,7 @@
 
 using Hangfire;
 using HangfireSpa.Server.Data;
+using HangfireSpa.Server.Services;
 using Microsoft.EntityFrameworkCore;
 
 namespace HangfireSpa.Server;
@@ -18,6 +19,11 @@ public class Program
         // Add services to the container.
         builder.Services.AddAuthorization();
         builder.Services.AddControllers();
+
+        // Add in solution services
+        builder.Services.AddScoped<HangfireJobService>();
+        builder.Services.AddSingleton<ApplicationShutdownService>();
+
         builder.Services.AddHangfire(config =>
         {
             config.SetDataCompatibilityLevel(CompatibilityLevel.Version_180);
@@ -25,16 +31,16 @@ public class Program
             config.UseInMemoryStorage();
             config.UseSimpleAssemblyNameTypeSerializer();
             config.UseRecommendedSerializerSettings();
-            
+
         });
         builder.Services.AddHangfireServer(options =>
         {
             //TODO:  This is insane, dont do this in production. Recommended is ProcessorCount * 5;
             options.WorkerCount = Environment.ProcessorCount * 20;
         });
-        
-        //builder.Services.AddIdentityApiEndpoints<IdentityUser>(opt =>
-        //{
+
+        // builder.Services.AddIdentityApiEndpoints<IdentityUser>(opt =>
+        // {
         //    opt.User.RequireUniqueEmail = true;
         //    opt.Password.RequiredLength = 5;
         //    opt.Password.RequireNonAlphanumeric = false;
@@ -44,8 +50,8 @@ public class Program
         //    opt.SignIn.RequireConfirmedEmail = false;
         //    opt.SignIn.RequireConfirmedPhoneNumber = false;
         //    opt.SignIn.RequireConfirmedAccount = false;
-           
-        //});
+
+        // });
 
         // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
         builder.Services.AddEndpointsApiExplorer();
