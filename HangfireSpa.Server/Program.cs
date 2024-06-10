@@ -1,6 +1,6 @@
 
+using Hangfire;
 using HangfireSpa.Server.Data;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 namespace HangfireSpa.Server;
@@ -17,19 +17,35 @@ public class Program
 
         // Add services to the container.
         builder.Services.AddAuthorization();
-        builder.Services.AddIdentityApiEndpoints<IdentityUser>(opt =>
+        builder.Services.AddControllers();
+        builder.Services.AddHangfire(config =>
         {
-            opt.User.RequireUniqueEmail = true;
-            opt.Password.RequiredLength = 5;
-            opt.Password.RequireNonAlphanumeric = false;
-            opt.Password.RequireUppercase = false;
-            opt.Password.RequireLowercase = false;
-            opt.Password.RequiredUniqueChars = 0;
-            opt.SignIn.RequireConfirmedEmail = false;
-            opt.SignIn.RequireConfirmedPhoneNumber = false;
-            opt.SignIn.RequireConfirmedAccount = false;
+            config.SetDataCompatibilityLevel(CompatibilityLevel.Version_180);
+            config.UseColouredConsoleLogProvider();
+            config.UseInMemoryStorage();
+            config.UseSimpleAssemblyNameTypeSerializer();
+            config.UseRecommendedSerializerSettings();
+            
+        });
+        builder.Services.AddHangfireServer(options =>
+        {
+            //TODO:  This is insane, dont do this in production. Recommended is ProcessorCount * 5;
+            options.WorkerCount = Environment.ProcessorCount * 20;
+        });
+        
+        //builder.Services.AddIdentityApiEndpoints<IdentityUser>(opt =>
+        //{
+        //    opt.User.RequireUniqueEmail = true;
+        //    opt.Password.RequiredLength = 5;
+        //    opt.Password.RequireNonAlphanumeric = false;
+        //    opt.Password.RequireUppercase = false;
+        //    opt.Password.RequireLowercase = false;
+        //    opt.Password.RequiredUniqueChars = 0;
+        //    opt.SignIn.RequireConfirmedEmail = false;
+        //    opt.SignIn.RequireConfirmedPhoneNumber = false;
+        //    opt.SignIn.RequireConfirmedAccount = false;
            
-        })
+        //});
 
         // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
         builder.Services.AddEndpointsApiExplorer();
@@ -44,27 +60,9 @@ public class Program
             app.UseSwaggerUI();
         }
 
+        app.UseHangfireDashboard("/hangfire");
         app.UseAuthorization();
-
-        var summaries = new[]
-        {
-            "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-        };
-
-        app.MapGet("/weatherforecast", (HttpContext httpContext) =>
-        {
-            var forecast =  Enumerable.Range(1, 5).Select(index =>
-                new WeatherForecast
-                {
-                    Date = DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-                    TemperatureC = Random.Shared.Next(-20, 55),
-                    Summary = summaries[Random.Shared.Next(summaries.Length)]
-                })
-                .ToArray();
-            return forecast;
-        })
-        .WithName("GetWeatherForecast")
-        .WithOpenApi();
+        app.MapControllers();
 
         app.Run();
     }
