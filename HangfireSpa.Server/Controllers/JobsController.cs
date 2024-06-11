@@ -12,20 +12,22 @@ namespace HangfireSpa.Server.Controllers
         private readonly IBackgroundJobClient _backgroundJobClient;
         private readonly ILogger<JobsController> _logger;
         private readonly HangfireJobService _jobService;
+        private readonly ApplicationShutdownService _shutdownService;
 
-        public JobsController(IBackgroundJobClient backgroundJobClient, ILogger<JobsController> logger, HangfireJobService jobService)
+        public JobsController(IBackgroundJobClient backgroundJobClient, ILogger<JobsController> logger, HangfireJobService jobService, ApplicationShutdownService shutdownService)
         {
             _backgroundJobClient = backgroundJobClient;
             _logger = logger;
             _jobService = jobService;
+            _shutdownService = shutdownService;
         }
-       
+
 
         [HttpPost]
         [Route("[action]")]
         public IActionResult ScheduleMultipleJobs(int jobCount)
         {
-            _jobService.ScheduleMultipleJobs(jobCount, () => JobCallbackAction(), CancellationToken.None);
+            _jobService.ScheduleMultipleJobs(jobCount, () => JobCallbackAction(), _shutdownService.Token);
             return Ok();
         }
 
@@ -33,7 +35,7 @@ namespace HangfireSpa.Server.Controllers
         [Route("[action]")]
         public IActionResult EnqueueMultipleJobs(int jobCount)
         {
-            _jobService.EnqueueMultipleJobs(jobCount, () => JobCallbackAction(), CancellationToken.None);
+            _jobService.EnqueueMultipleJobs(jobCount, () => JobCallbackAction(), _shutdownService.Token);
             return Ok();
         }
 
@@ -46,6 +48,6 @@ namespace HangfireSpa.Server.Controllers
             Console.WriteLine("Job Callback Action Invoked!");
         }
 
-       
+
     }
 }

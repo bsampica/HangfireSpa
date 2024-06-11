@@ -23,12 +23,12 @@ namespace HangfireSpa.Server.Services
             {
                 if (!token.IsCancellationRequested)
                 {
-                    _logger.LogDebug($"Scheduled a Job! {job}");
+                    _logger.LogInformation($"Scheduled a Job! {job}");
                     _backgroundJobClient.Schedule(jobMethod, TimeSpan.FromSeconds(30));
                 }
                 else
                 {
-                    _logger.LogDebug("Cancellation requested!");
+                    _logger.LogInformation("Cancellation requested!");
                     break;
                 }
             }
@@ -40,12 +40,12 @@ namespace HangfireSpa.Server.Services
             {
                 if (!token.IsCancellationRequested)
                 {
-                    _logger.LogDebug($"Scheduled a Job! {job}");
+                    _logger.LogInformation($"Scheduled a Job! {job}");
                     _backgroundJobClient.Enqueue(jobMethod);
                 }
                 else
                 {
-                    _logger.LogDebug("Cancellation requested!");
+                    _logger.LogInformation("Cancellation requested!");
                     break;
                 }
             }
