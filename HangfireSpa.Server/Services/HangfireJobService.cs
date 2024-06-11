@@ -1,4 +1,5 @@
 ﻿using Hangfire;
+using Hangfire.Storage;
 using Hangfire.Storage.Monitoring;
 using HangfireSpa.Server.Data;
 using System.Linq.Expressions;
@@ -52,7 +53,7 @@ namespace HangfireSpa.Server.Services
 
         public void ScheduleOrEnqueueJob(int jobCount, JobType jobType, Expression<Action> jobMethod, CancellationToken token)
         {
-            switch(jobType)
+            switch (jobType)
             {
                 case JobType.Scheduled:
                     ScheduleMultipleJobs(jobCount, jobMethod, token);
@@ -62,13 +63,75 @@ namespace HangfireSpa.Server.Services
             }
         }
 
-        public object GetJobs()
+        public IEnumerable<string> GetAllJobs(bool includeDeleted = false, bool includeFailed = false)
+        {
+            var jobsList = new List<string>();
+            jobsList.AddRange(GetScheduledJobs());
+            jobsList.AddRange(GetEnqueuedJobs());
+            jobsList.AddRange(GetCompletedJobs());
+            jobsList.AddRange(GetProcessingJobs());
+            jobsList.AddRange(GetReoccuringJobs());
+            if (includeDeleted) jobsList.AddRange(GetDeletedJobs());
+            if (includeFailed) jobsList.AddRange(GetFailedJobs());
+            return jobsList;
+        }
+
+        public IEnumerable<string> GetScheduledJobs()
         {
             var jobsList = new List<string>();
 
             jobsList = JobStorage.Current.GetMonitoringApi().ScheduledJobs(0, int.MaxValue)
                         .Select(x => x.Key).ToList();
 
+            return jobsList;
+        }
+
+        public IEnumerable<string> GetEnqueuedJobs()
+        {
+            var jobsList = new List<string>();
+            jobsList = JobStorage.Current.GetMonitoringApi().EnqueuedJobs("default", 0, int.MaxValue)
+                        .Select(x => x.Key).ToList();
+            return jobsList;
+        }
+
+        public IEnumerable<string> GetCompletedJobs()
+        {
+            var jobsList = new List<string>();
+            jobsList = JobStorage.Current.GetMonitoringApi().SucceededJobs(0, int.MaxValue)
+                        .Select(x => x.Key).ToList();
+            return jobsList;
+        }
+
+        public IEnumerable<string> GetFailedJobs()
+        {
+            var jobsList = new List<string>();
+            jobsList = JobStorage.Current.GetMonitoringApi().FailedJobs(0, int.MaxValue)
+                        .Select(x => x.Key).ToList();
+            return jobsList;
+        }
+
+        public IEnumerable<string> GetProcessingJobs()
+        {
+            var jobsList = new List<string>();
+            jobsList = JobStorage.Current.GetMonitoringApi().ProcessingJobs(0, int.MaxValue)
+                        .Select(x => x.Key).ToList();
+            return jobsList;
+        }
+
+        public IEnumerable<string> GetReoccuringJobs()
+        {
+            var jobsList = new List<string>();
+            jobsList = JobStorage.Current.GetConnection().GetRecurringJobs()
+                        .Select(x => x.Id).ToList();
+
+            return jobsList;
+        }
+
+        public IEnumerable<string> GetDeletedJobs()
+        {
+            var jobsList = new List<string>();
+            jobsList = JobStorage.Current.GetMonitoringApi().DeletedJobs(0, int.MaxValue)
+                        .Select(x => x.Key).ToList();
             return jobsList;
         }
     }
