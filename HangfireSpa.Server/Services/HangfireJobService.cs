@@ -1,8 +1,8 @@
 ﻿using Hangfire;
 using Hangfire.Storage;
-using Hangfire.Storage.Monitoring;
 using HangfireSpa.Server.Data;
 using System.Linq.Expressions;
+using HangfireSpa.Server.Helpers;
 
 namespace HangfireSpa.Server.Services
 {
@@ -51,6 +51,7 @@ namespace HangfireSpa.Server.Services
             }
         }
 
+        [JobNotification]
         public void ScheduleOrEnqueueJob(int jobCount, JobType jobType, Expression<Action> jobMethod, CancellationToken token)
         {
             switch (jobType)

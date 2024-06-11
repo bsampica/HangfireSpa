@@ -1,4 +1,5 @@
 ﻿using Hangfire;
+using HangfireSpa.Server.Helpers;
 using HangfireSpa.Server.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -41,6 +42,7 @@ namespace HangfireSpa.Server.Controllers
 
         // Test Method to ensure the activator can invoke the method from another class
         [ApiExplorerSettings(IgnoreApi = true)]
+        [JobNotification]
         public void JobCallbackAction()
         {
             //TODO: Simulate a long running job
